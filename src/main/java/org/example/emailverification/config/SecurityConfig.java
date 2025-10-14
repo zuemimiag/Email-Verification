@@ -1,5 +1,6 @@
 package org.example.emailverification.config;
 
+import org.example.emailverification.service.CustomUserDetailService;
 import org.springframework.boot.autoconfigure.security.SecurityProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -19,29 +20,33 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    @Bean
-    public PasswordEncoder passwordEncoder(){
-        return new BCryptPasswordEncoder();
+    private final CustomUserDetailService userDetailService;
+
+    public SecurityConfig(CustomUserDetailService userDetailService) {
+        this.userDetailService = userDetailService;
     }
 
-    @Bean
-    public UserDetailsService userDetailsService(){
-        UserDetails user = User
-                .withUsername("zmma")
-                .password(passwordEncoder().encode("12345"))
-                .roles("ADMIN")
-                .build();
-        return new InMemoryUserDetailsManager(user);
-    }
+
+//    @Bean
+//    public UserDetailsService userDetailsService(){
+//        UserDetails user = User
+//                .withUsername("zmma")
+//                .password(passwordEncoder().encode("12345"))
+//                .roles("ADMIN")
+//                .build();
+//        return new InMemoryUserDetailsManager(user);
+    //}
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception{
         http
                 .authorizeHttpRequests(
-                        req-> req.anyRequest().authenticated()
+                        req-> req
+                                .requestMatchers("/register/**").permitAll()
+                                .anyRequest().authenticated()
                 ).formLogin(Customizer.withDefaults())
                 .logout(Customizer.withDefaults())
-                .userDetailsService(userDetailsService());
+                .userDetailsService(userDetailService);
 
         return http.build();
     }
